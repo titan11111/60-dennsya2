@@ -126,6 +126,7 @@ class AdvancedRPGGame {
         this.currentScreen = 'title-screen';
         this.messageQueue = [];
         this.isTyping = false;
+        this.playerPosition = { x: 0, y: 0 };
 
         this.init();
     }
@@ -167,6 +168,9 @@ class AdvancedRPGGame {
             victoryScreen: document.getElementById('victory-screen'),
             loadingScreen: document.getElementById('loading-screen'),
 
+            // マップ
+            mapArea: document.getElementById('map-area'),
+
             // ステータス表示
             hp: document.getElementById('hp'),
             maxHp: document.getElementById('max-hp'),
@@ -198,6 +202,9 @@ class AdvancedRPGGame {
             // ロケーション
             locations: document.querySelectorAll('.location')
         };
+        this.playerPosition.x = (this.elements.mapArea.clientWidth - this.elements.player.clientWidth) / 2;
+        this.playerPosition.y = (this.elements.mapArea.clientHeight - this.elements.player.clientHeight) / 2;
+        this.updatePlayerPosition();
     }
 
     bindEvents() {
@@ -548,17 +555,46 @@ class AdvancedRPGGame {
         }
     }
 
+    updatePlayerPosition() {
+        const playerElement = this.elements.player;
+        playerElement.style.left = `${this.playerPosition.x}px`;
+        playerElement.style.top = `${this.playerPosition.y}px`;
+    }
+
     // 移動とアクション
     movePlayer(direction) {
-        // プレイヤーキャラクターの移動アニメーション
         const playerElement = this.elements.player;
+        const mapArea = this.elements.mapArea;
+        const step = 20;
+
+        const maxX = mapArea.clientWidth - playerElement.clientWidth;
+        const maxY = mapArea.clientHeight - playerElement.clientHeight;
+
+        switch (direction) {
+            case 'up':
+                this.playerPosition.y = Math.max(0, this.playerPosition.y - step);
+                break;
+            case 'down':
+                this.playerPosition.y = Math.min(maxY, this.playerPosition.y + step);
+                break;
+            case 'left':
+                this.playerPosition.x = Math.max(0, this.playerPosition.x - step);
+                break;
+            case 'right':
+                this.playerPosition.x = Math.min(maxX, this.playerPosition.x + step);
+                break;
+        }
+
+        this.updatePlayerPosition();
+
+        // プレイヤーキャラクターの移動アニメーション
         playerElement.style.transform = 'scale(1.2)';
         setTimeout(() => {
             playerElement.style.transform = 'scale(1)';
         }, 200);
-        
+
         this.playSound('move');
-        
+
         // ランダムエンカウントチェック
         if (Math.random() < 0.15 && this.gameState.currentLocation !== 'town') {
             this.randomEncounter();
