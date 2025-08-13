@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏰 ドラゴンクエスト風RPG ⚔️</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#667eea">
+</head>
+<body>
+    <div id="game-container">
+        <!-- タイトル画面 -->
+        <div id="title-screen" class="screen">
+            <div class="title-content">
+                <h1>🏰 勇者の冒険 ⚔️</h1>
+                <div class="subtitle">～ドラゴンを倒して世界を救え！～</div>
+                <div class="menu-options">
+                    <button id="new-game-btn" class="menu-btn primary">あたらしく はじめる</button>
+                    <button id="continue-btn" class="menu-btn secondary">つづきから はじめる</button>
+                    <button id="settings-btn" class="menu-btn">せってい</button>
+                </div>
+                <div class="version">ver 1.0</div>
+            </div>
+        </div>
+
+        <!-- 設定画面 -->
+        <div id="settings-screen" class="screen hidden">
+            <h2>⚙️ せってい</h2>
+            <div class="settings-content">
+                <div class="setting-item">
+                    <label>音量:</label>
+                    <input type="range" id="volume-slider" min="0" max="100" value="50">
+                    <span id="volume-value">50</span>%
+                </div>
+                <div class="setting-item">
+                    <label>メッセージ速度:</label>
+                    <select id="text-speed">
+                        <option value="slow">おそい</option>
+                        <option value="normal" selected>ふつう</option>
+                        <option value="fast">はやい</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label>オートセーブ:</label>
+                    <input type="checkbox" id="auto-save" checked>
+                </div>
+            </div>
+            <button id="settings-back-btn" class="big-btn">もどる</button>
+        </div>
+
+        <!-- メイン画面 -->
+        <div id="main-screen" class="screen hidden">
+            <!-- ステータス表示 -->
+            <div id="status-bar">
+                <div class="status-section">
+                    <div class="character-info">
+                        <span class="character-name" id="char-name">ゆうしゃ</span>
+                        <span class="character-job" id="char-job">Lv.<span id="level">1</span></span>
+                    </div>
+                </div>
+                <div class="status-section">
+                    <div class="hp-mp-bars">
+                        <div class="stat-bar">
+                            <span>❤️ HP</span>
+                            <div class="bar-container">
+                                <div class="bar hp-bar">
+                                    <div class="bar-fill" id="hp-bar-fill"></div>
+                                </div>
+                                <span class="bar-text"><span id="hp">100</span>/<span id="max-hp">100</span></span>
+                            </div>
+                        </div>
+                        <div class="stat-bar">
+                            <span>💫 MP</span>
+                            <div class="bar-container">
+                                <div class="bar mp-bar">
+                                    <div class="bar-fill" id="mp-bar-fill"></div>
+                                </div>
+                                <span class="bar-text"><span id="mp">30</span>/<span id="max-mp">30</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="status-section">
+                    <div class="gold-exp">
+                        <div>💰 <span id="gold">100</span>G</div>
+                        <div>⭐ EXP: <span id="exp">0</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- マップエリア -->
+            <div id="map-area">
+                <div class="map-background"></div>
+                <div id="player" class="character">🧙‍♂️</div>
+                <div class="location town active" id="town-loc" data-location="town">
+                    <div class="location-icon">🏘️</div>
+                    <div class="location-name">まち</div>
+                </div>
+                <div class="location forest" id="forest-loc" data-location="forest">
+                    <div class="location-icon">🌲</div>
+                    <div class="location-name">もり</div>
+                </div>
+                <div class="location mountain" id="mountain-loc" data-location="mountain">
+                    <div class="location-icon">⛰️</div>
+                    <div class="location-name">やま</div>
+                </div>
+                <div class="location desert" id="desert-loc" data-location="desert">
+                    <div class="location-icon">🏜️</div>
+                    <div class="location-name">さばく</div>
+                </div>
+                <div class="location cave" id="cave-loc" data-location="cave">
+                    <div class="location-icon">🕳️</div>
+                    <div class="location-name">どうくつ</div>
+                </div>
+                <div class="location castle" id="castle-loc" data-location="castle">
+                    <div class="location-icon">🏰</div>
+                    <div class="location-name">まおうのしろ</div>
+                </div>
+            </div>
+
+            <!-- メッセージエリア -->
+            <div id="message-area">
+                <div id="message-text">ようこそ、ゆうしゃ！せかいをすくうぼうけんがはじまります！</div>
+                <div id="message-next">▼</div>
+            </div>
+
+            <!-- コントロール -->
+            <div id="main-controls">
+                <button class="control-btn menu-control" id="menu-btn">📋 メニュー</button>
+                <button class="control-btn save-control" id="save-btn">💾 セーブ</button>
+                <div class="movement-controls">
+                    <div class="movement-grid">
+                        <div></div>
+                        <button class="move-btn" data-direction="up">⬆️</button>
+                        <div></div>
+                        <button class="move-btn" data-direction="left">⬅️</button>
+                        <button class="move-btn center" id="action-btn">⚡</button>
+                        <button class="move-btn" data-direction="right">➡️</button>
+                        <div></div>
+                        <button class="move-btn" data-direction="down">⬇️</button>
+                        <div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- メニュー画面 -->
+        <div id="menu-screen" class="screen hidden">
+            <h2>📋 メニュー</h2>
+            <div class="menu-grid">
+                <button class="menu-item" id="status-menu-btn">
+                    <div class="menu-icon">📊</div>
+                    <div class="menu-label">つよさ</div>
+                </button>
+                <button class="menu-item" id="items-menu-btn">
+                    <div class="menu-icon">🎒</div>
+                    <div class="menu-label">どうぐ</div>
+                </button>
+                <button class="menu-item" id="magic-menu-btn">
+                    <div class="menu-icon">✨</div>
+                    <div class="menu-label">じゅもん</div>
+                </button>
+                <button class="menu-item" id="equip-menu-btn">
+                    <div class="menu-icon">⚔️</div>
+                    <div class="menu-label">そうび</div>
+                </button>
+            </div>
+            <button id="menu-close-btn" class="big-btn">もどる</button>
+        </div>
+
+        <!-- ステータス画面 -->
+        <div id="status-screen" class="screen hidden">
+            <h2>📊 つよさ</h2>
+            <div class="status-details">
+                <div class="character-portrait">🧙‍♂️</div>
+                <div class="stat-list">
+                    <div class="stat-item">
+                        <span class="stat-name">なまえ:</span>
+                        <span class="stat-value" id="status-name">ゆうしゃ</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-name">しょくぎょう:</span>
+                        <span class="stat-value" id="status-job">ゆうしゃ</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-name">レベル:</span>
+                        <span class="stat-value" id="status-level">1</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-name">つぎのレベルまで:</span>
+                        <span class="stat-value"><span id="status-next-exp">100</span> EXP</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-name">こうげきりょく:</span>
+                        <span class="stat-value" id="status-attack">15</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-name">しゅびりょく:</span>
+                        <span class="stat-value" id="status-defense">10</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-name">すばやさ:</span>
+                        <span class="stat-value" id="status-speed">12</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-name">うんのよさ:</span>
+                        <span class="stat-value" id="status-luck">8</span>
+                    </div>
+                </div>
+            </div>
+            <button id="status-close-btn" class="big-btn">もどる</button>
+        </div>
+
+        <!-- アイテム画面 -->
+        <div id="items-screen" class="screen hidden">
+            <h2>🎒 どうぐ</h2>
+            <div id="items-list" class="items-container">
+                <!-- アイテムリストはJavaScriptで生成 -->
+            </div>
+            <button id="items-close-btn" class="big-btn">もどる</button>
+        </div>
+
+        <!-- 戦闘画面 -->
+        <div id="battle-screen" class="screen hidden">
+            <div class="battle-layout">
+                <div class="enemy-area">
+                    <div id="enemy-group" class="enemy-group">
+                        <!-- 敵はJavaScriptで生成 -->
+                    </div>
+                    <div id="enemy-info">
+                        <div id="enemy-name-display">スライム</div>
+                        <div class="enemy-hp-bar">
+                            <div class="enemy-hp-fill" id="enemy-hp-fill"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="battle-message-area">
+                    <div id="battle-message">スライムが あらわれた！</div>
+                </div>
+                
+                <div class="party-area">
+                    <div class="party-member active">
+                        <div class="member-portrait">🧙‍♂️</div>
+                        <div class="member-info">
+                            <div class="member-name">ゆうしゃ</div>
+                            <div class="member-hp">
+                                <div class="hp-bar-small">
+                                    <div class="hp-fill-small" id="battle-player-hp"></div>
+                                </div>
+                                <span><span id="battle-hp">100</span>/<span id="battle-max-hp">100</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="battle-menu" class="battle-menu">
+                    <div class="battle-commands">
+                        <button class="battle-cmd" id="battle-attack">⚔️ たたかう</button>
+                        <button class="battle-cmd" id="battle-magic">✨ じゅもん</button>
+                        <button class="battle-cmd" id="battle-item">🎒 どうぐ</button>
+                        <button class="battle-cmd" id="battle-run">💨 にげる</button>
+                    </div>
+                </div>
+
+                <!-- 魔法選択メニュー -->
+                <div id="magic-battle-menu" class="battle-submenu hidden">
+                    <div class="submenu-title">じゅもんをえらんでください</div>
+                    <div id="magic-list" class="magic-list">
+                        <!-- 魔法リストはJavaScriptで生成 -->
+                    </div>
+                    <button class="submenu-back">もどる</button>
+                </div>
+
+                <!-- アイテム選択メニュー -->
+                <div id="item-battle-menu" class="battle-submenu hidden">
+                    <div class="submenu-title">どうぐをえらんでください</div>
+                    <div id="battle-items-list" class="items-list">
+                        <!-- アイテムリストはJavaScriptで生成 -->
+                    </div>
+                    <button class="submenu-back">もどる</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ショップ画面 -->
+        <div id="shop-screen" class="screen hidden">
+            <h2>🛒 みせ</h2>
+            <div class="shop-keeper">
+                <div class="keeper-portrait">👨‍💼</div>
+                <div class="keeper-message" id="keeper-message">いらっしゃいませ！</div>
+            </div>
+            <div class="shop-tabs">
+                <button class="shop-tab active" data-tab="buy">かう</button>
+                <button class="shop-tab" data-tab="sell">うる</button>
+            </div>
+            <div id="shop-buy" class="shop-content">
+                <div id="shop-items" class="shop-items">
+                    <!-- ショップアイテムはJavaScriptで生成 -->
+                </div>
+            </div>
+            <div id="shop-sell" class="shop-content hidden">
+                <div id="sell-items" class="shop-items">
+                    <!-- 売却アイテムはJavaScriptで生成 -->
+                </div>
+            </div>
+            <div class="shop-footer">
+                <div class="shop-gold">💰 <span id="shop-gold">100</span>G</div>
+                <button id="shop-close-btn" class="big-btn">みせをでる</button>
+            </div>
+        </div>
+
+        <!-- レベルアップ画面 -->
+        <div id="levelup-screen" class="screen hidden">
+            <div class="levelup-content">
+                <h1 class="levelup-title">🎉 レベルアップ！ 🎉</h1>
+                <div class="levelup-character">🧙‍♂️</div>
+                <div class="levelup-info">
+                    <div class="level-display">
+                        レベル <span id="old-level">1</span> → <span id="new-level">2</span>
+                    </div>
+                    <div class="stat-increases">
+                        <div class="stat-increase">HP + <span id="hp-increase">15</span></div>
+                        <div class="stat-increase">MP + <span id="mp-increase">5</span></div>
+                        <div class="stat-increase">こうげき + <span id="attack-increase">3</span></div>
+                        <div class="stat-increase">しゅび + <span id="defense-increase">2</span></div>
+                    </div>
+                    <div id="learned-spell" class="learned-spell hidden">
+                        <div class="spell-learned">あたらしいじゅもんをおぼえた！</div>
+                        <div class="spell-name" id="new-spell-name">ホイミ</div>
+                    </div>
+                </div>
+                <button id="levelup-ok-btn" class="big-btn">つづける</button>
+            </div>
+        </div>
+
+        <!-- ゲームオーバー画面 -->
+        <div id="gameover-screen" class="screen hidden">
+            <div class="gameover-content">
+                <h1 class="gameover-title">💀 ゲームオーバー 💀</h1>
+                <div class="gameover-message">
+                    ゆうしゃは しんでしまった...<br>
+                    しかし すべてがおわったわけではない
+                </div>
+                <div class="gameover-options">
+                    <button id="gameover-continue-btn" class="big-btn primary">つづきから</button>
+                    <button id="gameover-restart-btn" class="big-btn secondary">さいしょから</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ゲームクリア画面 -->
+        <div id="victory-screen" class="screen hidden">
+            <div class="victory-content">
+                <h1 class="victory-title">🎊 ゲームクリア！ 🎊</h1>
+                <div class="victory-character">👑</div>
+                <div class="victory-message">
+                    おめでとう！<br>
+                    きみは りっぱな ゆうしゃだ！<br>
+                    せかいに へいわが もどった！
+                </div>
+                <div class="victory-stats">
+                    <div>さいしゅうレベル: <span id="final-level">??</span></div>
+                    <div>プレイじかん: <span id="play-time">??</span></div>
+                    <div>たおしたてき: <span id="defeated-enemies">??</span></div>
+                </div>
+                <button id="victory-restart-btn" class="big-btn">また あそぶ</button>
+            </div>
+        </div>
+
+        <!-- ローディング画面 -->
+        <div id="loading-screen" class="screen hidden">
+            <div class="loading-content">
+                <div class="loading-spinner">⚡</div>
+                <div class="loading-text">ロード中...</div>
+                <div class="loading-bar">
+                    <div class="loading-progress" id="loading-progress"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ゲーム内SE用の隠しaudio要素 -->
+    <audio id="bgm-town" loop preload="auto">
+        <source src="assets/bgm/town.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="bgm-field" loop preload="auto">
+        <source src="assets/bgm/field.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="bgm-battle" loop preload="auto">
+        <source src="assets/bgm/battle.mp3" type="audio/mpeg">
+    </audio>
+
+    <script src="script.js"></script>
+</body>
+</html>
