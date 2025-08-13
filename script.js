@@ -140,7 +140,7 @@ class AdvancedRPGGame {
         // 自動セーブタイマー
         setInterval(() => {
             if (this.settings.autoSave && this.currentScreen !== 'title-screen') {
-                this.saveGame();
+                this.saveGame(true);
             }
         }, 30000); // 30秒ごと
 
@@ -286,7 +286,7 @@ class AdvancedRPGGame {
         this.showScreen('main-screen');
         this.playBGM('field');
         this.showMessage('ようこそ、ゆうしゃ！せかいをすくうぼうけんがはじまります！');
-        this.saveGame();
+        this.saveGame(true);
     }
 
     continueGame() {
@@ -1269,7 +1269,7 @@ class AdvancedRPGGame {
     }
 
     // セーブ・ロードシステム
-    saveGame() {
+    saveGame(silent = false) {
         const saveData = {
             player: this.player,
             inventory: this.inventory,
@@ -1282,9 +1282,13 @@ class AdvancedRPGGame {
         
         try {
             localStorage.setItem('advancedRPGSave', JSON.stringify(saveData));
-            this.showMessage('ゲームを セーブしました！');
+            if (!silent) {
+                this.showMessage('ゲームを セーブしました！');
+            }
         } catch (error) {
-            this.showMessage('セーブに しっぱいしました...');
+            if (!silent) {
+                this.showMessage('セーブに しっぱいしました...');
+            }
         }
     }
 
@@ -1488,7 +1492,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ページ終了時の自動セーブ
 window.addEventListener('beforeunload', () => {
     if (game && game.settings.autoSave) {
-        game.saveGame();
+        game.saveGame(true);
     }
 });
 
