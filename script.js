@@ -565,7 +565,7 @@ class AdvancedRPGGame {
     movePlayer(direction) {
         const playerElement = this.elements.player;
         const mapArea = this.elements.mapArea;
-        const step = 20;
+        const step = 40;
 
         const maxX = mapArea.clientWidth - playerElement.clientWidth;
         const maxY = mapArea.clientHeight - playerElement.clientHeight;
@@ -1377,9 +1377,15 @@ class AdvancedRPGGame {
     // キーボード操作
     handleKeyboard(event) {
         if (this.isTyping) return;
-        
-        const key = event.key.toLowerCase();
-        
+
+        const rawKey = event.key;
+        const key = rawKey.toLowerCase();
+        const movementKeys = ['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'up', 'down', 'left', 'right', 'w', 'a', 's', 'd', '↑', '↓', '←', '→'];
+
+        if (movementKeys.includes(key) || movementKeys.includes(rawKey)) {
+            event.preventDefault();
+        }
+
         switch (this.currentScreen) {
             case 'main-screen':
                 this.handleMainScreenKeys(key);
@@ -1403,18 +1409,26 @@ class AdvancedRPGGame {
                 this.showScreen('menu-screen');
                 break;
             case 'arrowup':
+            case 'up':
+            case '↑':
             case 'w':
                 this.movePlayer('up');
                 break;
             case 'arrowdown':
+            case 'down':
+            case '↓':
             case 's':
                 this.movePlayer('down');
                 break;
             case 'arrowleft':
+            case 'left':
+            case '←':
             case 'a':
                 this.movePlayer('left');
                 break;
             case 'arrowright':
+            case 'right':
+            case '→':
             case 'd':
                 this.movePlayer('right');
                 break;
