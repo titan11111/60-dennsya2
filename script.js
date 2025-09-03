@@ -220,13 +220,27 @@ class AdvancedRPGGame {
         document.getElementById('auto-save').addEventListener('change', (e) => this.updateAutoSave(e.target.checked));
 
         // メイン画面
-        document.getElementById('menu-btn').addEventListener('click', () => this.showScreen('menu-screen'));
-        document.getElementById('save-btn').addEventListener('click', () => this.saveGame());
-        document.getElementById('action-btn').addEventListener('click', () => this.performAction());
+        document.getElementById('menu-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.showScreen('menu-screen');
+        });
+        document.getElementById('save-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.saveGame();
+        });
+        document.getElementById('action-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.performAction();
+        });
 
         // 移動コントロール
         document.querySelectorAll('.move-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 const direction = e.target.dataset.direction;
                 if (direction) this.movePlayer(direction);
             });
