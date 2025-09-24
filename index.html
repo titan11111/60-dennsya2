@@ -1,184 +1,585 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地下鉄からの脱出 - ホラーアドベンチャー</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
 
-body {
-    font-family: 'Arial', sans-serif;
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    color: white;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+    <style>
+        /* --- 全体のスタイル --- */
+        body {
+            /* 基本フォントを Kosugi Maru に変更 */
+            font-family: 'Kosugi Maru', "游ゴシック", "Noto Sans JP", sans-serif;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            color: #eee;
+            margin: 0;
+            padding: 10px;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
 
-.game-container {
-    max-width: 500px;
-    width: 100%;
-    padding: 20px;
-}
+        /* --- 背景のアニメーション (変更なし) --- */
+        body::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,0,0,0.12) 0%, transparent 70%);
+            animation: pulse 6s infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+        }
 
-.score-panel {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 15px;
-    text-align: center;
-    backdrop-filter: blur(10px);
-}
+        body::after {
+            content: "";
+            position: absolute;
+            top: 0; 
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-radial-gradient(circle, rgba(255,0,0,0.1) 0 2px, transparent 3px 6px);
+            animation: noise 1.2s infinite steps(4);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 1;
+        }
 
-.score-display {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 15px;
-    font-size: 18px;
-    font-weight: bold;
-}
+        /* --- 見出しのスタイル (フォントを Noto Serif JP に変更) --- */
+        h1, h2 {
+            font-family: 'Noto Serif JP', "游明朝", serif; /* 怖い明朝体 */
+            color: #ff3333;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.7), 0 0 20px #800000;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+            font-size: 2.5em;
+        }
 
-.start-btn, .reset-btn {
-    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 25px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    margin: 5px;
-    transition: all 0.3s ease;
-}
+        h1::after, h2::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            width: 6px;
+            height: 20px;
+            background: #ff0000;
+            border-radius: 50%;
+            animation: drip 2.5s infinite;
+        }
+        
+        /* --- 画面のコンテナ (変更なし) --- */
+        .screen {
+            display: none;
+            padding: 20px;
+            max-width: 90%;
+            width: 800px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #444;
+            border-radius: 10px;
+            box-shadow: 0 0 25px rgba(255,0,0,0.5);
+            animation: fadeIn 0.6s ease;
+            position: relative;
+            z-index: 2;
+        }
 
-.start-btn:hover, .reset-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
-}
+        .screen.active {
+            display: block;
+        }
 
-.pinball-table {
-    position: relative;
-    background: linear-gradient(180deg, #2c3e50, #34495e);
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
+        /* --- ボタンのスタイル (変更なし) --- */
+        button {
+            display: block;
+            margin: 15px auto;
+            padding: 12px 30px;
+            background: linear-gradient(180deg, #222, #111);
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+            border: 2px solid #ff3333;
+            border-radius: 8px;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: all 0.25s ease-in-out;
+            text-shadow: 0 0 5px #000;
+            z-index: 2;
+            position: relative;
+            min-height: 44px;
+            touch-action: manipulation;
+        }
 
-#gameCanvas {
-    width: 100%;
-    height: 600px;
-    background: linear-gradient(180deg, #1a1a2e, #16213e);
-    border: 3px solid #3498db;
-    border-radius: 10px;
-    display: block;
-}
+        button:hover {
+            background: #ff3333;
+            border-color: #fff;
+            color: #000;
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.8);
+            animation: shake 0.2s infinite;
+        }
 
-.flipper-controls {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 15px;
-    gap: 10px;
-}
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        /* --- テキスト表示エリア (フォントを Kosugi Maru に変更) --- */
+        #sceneText, #endText, #instructionText {
+            font-family: 'Kosugi Maru', "游ゴシック", "Noto Sans JP", sans-serif; /* 不気味な丸ゴシック */
+            margin: 20px auto;
+            max-width: 100%;
+            text-align: left;
+            line-height: 1.8;
+            white-space: pre-line;
+            padding: 20px;
+            font-size: 16px;
+            background: rgba(20,20,20,0.9);
+            border-left: 6px solid #ff3333;
+            border-radius: 6px;
+            box-shadow: inset 0 0 15px rgba(255,0,0,0.5);
+            z-index: 2;
+        }
 
-.flipper-btn {
-    flex: 1;
-    background: linear-gradient(45deg, #3498db, #2980b9);
-    border: none;
-    color: white;
-    padding: 15px;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
-}
+        #choices {
+            margin-top: 25px;
+        }
 
-.flipper-btn:active {
-    transform: scale(0.95);
-    background: linear-gradient(45deg, #2980b9, #3498db);
-}
+        /* --- スマートフォン対応 --- */
+        @media (max-width: 768px) {
+            h1 { font-size: 2em; }
+            h2 { font-size: 1.8em; }
+            #sceneText, #endText, #instructionText { font-size: 14px; padding: 15px; }
+            button { font-size: 14px; padding: 14px 25px; width: 90%; }
+        }
 
-.flipper-btn.left {
-    background: linear-gradient(45deg, #e74c3c, #c0392b);
-}
+        @media (max-width: 480px) {
+            h1 { font-size: 1.8em; }
+            h2 { font-size: 1.5em; }
+            #sceneText, #endText, #instructionText { font-size: 13px; padding: 12px; }
+            button { font-size: 13px; padding: 12px 20px; width: 95%; }
+        }
 
-.flipper-btn.right {
-    background: linear-gradient(45deg, #27ae60, #229954);
-}
+        /* --- アニメーション定義 (変更なし) --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            from { transform: scale(1); opacity: 0.25; }
+            to { transform: scale(1.2); opacity: 0.6; }
+        }
+        @keyframes drip {
+            0% { height: 0; opacity: 0; }
+            30% { height: 15px; opacity: 1; }
+            60% { height: 25px; opacity: 1; }
+            100% { height: 0; opacity: 0; }
+        }
+        @keyframes noise {
+            0% { background-position: 0 0; }
+            25% { background-position: 20px -10px; }
+            50% { background-position: -15px 15px; }
+            75% { background-position: -25px 5px; }
+            100% { background-position: 0 0; }
+        }
+        @keyframes shake {
+            0% { transform: translate(0, 0) scale(1.05); }
+            25% { transform: translate(-2px, 1px) scale(1.05); }
+            50% { transform: translate(2px, -1px) scale(1.05); }
+            75% { transform: translate(-1px, -2px) scale(1.05); }
+            100% { transform: translate(0, 0) scale(1.05); }
+        }
+    </style>
+</head>
+<body>
 
-.flipper-btn.left:active {
-    background: linear-gradient(45deg, #c0392b, #e74c3c);
-}
+    <div id="titleScreen" class="screen active">
+        <h1>地下鉄からの脱出</h1>
+        <p>ホラーアドベンチャー</p>
+        <button onclick="startGame()">ゲーム開始</button>
+        <button onclick="showInstructions()">遊び方</button>
+    </div>
 
-.flipper-btn.right:active {
-    background: linear-gradient(45deg, #229954, #27ae60);
-}
+    <div id="instructionScreen" class="screen">
+        <h2>遊び方</h2>
+        <div id="instructionText">
+このゲームは選択肢を選んで進むホラーアドベンチャーです。
 
-.instructions {
-    margin-top: 15px;
-    text-align: center;
-    font-size: 14px;
-    opacity: 0.8;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 10px;
-    border-radius: 8px;
-}
+・画面に表示される選択肢をタップして進めます
+・間違った選択をするとBAD ENDになります
+・全28シーンを越えてクリアエンドを目指しましょう
+・小学生でも遊べますが、ちょっと怖い内容です
 
-/* レスポンシブ対応 */
-@media (max-width: 768px) {
-    .game-container {
-        padding: 10px;
-        max-width: 100%;
-    }
-    
-    #gameCanvas {
-        height: 500px;
-    }
-    
-    .score-display {
-        font-size: 16px;
-    }
-    
-    .flipper-btn {
-        padding: 12px;
-        font-size: 14px;
-    }
-    
-    .instructions {
-        font-size: 12px;
-    }
-}
+地下鉄で爆発が起こり、あなただけが生き残りました。
+暗闇の地下トンネルから脱出できるでしょうか...？
+        </div>
+        <button onclick="showTitle()">戻る</button>
+    </div>
 
-@media (max-width: 480px) {
-    .game-container {
-        padding: 5px;
-    }
-    
-    #gameCanvas {
-        height: 450px;
-    }
-    
-    .score-display {
-        flex-direction: column;
-        gap: 5px;
-    }
-    
-    .flipper-controls {
-        gap: 5px;
-    }
-    
-    .flipper-btn {
-        padding: 10px;
-        font-size: 13px;
-    }
-}
+    <div id="gameScreen" class="screen">
+        <div id="sceneText"></div>
+        <div id="choices"></div>
+        <button onclick="showTitle()" style="margin-top: 30px;">タイトルに戻る</button>
+    </div>
 
-/* タッチデバイス用の調整 */
-@media (hover: none) and (pointer: coarse) {
-    .flipper-btn {
-        padding: 18px;
-        font-size: 16px;
-    }
-}
+    <div id="endScreen" class="screen">
+        <h2>ゲーム終了</h2>
+        <div id="endText"></div>
+        <button onclick="startGame()">もう一度プレイ</button>
+        <button onclick="showTitle()">タイトルに戻る</button>
+    </div>
+
+    <script>
+        // --- ゲームのシナリオと選択肢のデータ ---
+        const gameData = {
+            "scene1": {
+                text: "──爆発音の直後、世界は暗闇と轟音に閉ざされた。地下鉄の車両は激しく歪み、天井の蛍光灯は砕け散って床に散乱している。残った破片はわずかな余震でゆらゆらと震え、足を踏み出すたびに粉々に砕ける。硝煙と血と焼けた鉄の匂いが混ざり合い、喉を焼きつけるように肺へ流れ込む。耳鳴りの中、かすかに呻き声が聞こえたが、それもすぐに消えた。倒れ伏した人影は二度と動かず、あなたは自分だけが辛うじて生き残ったことを理解する。背後では金属の軋む音が断続的に響き、崩壊の予兆を告げていた。立ち止まれば押し潰される。進む以外に選択肢はなかった。",
+                choices: [
+                    { text: "正面のトンネルを進む", next: "scene2" },
+                    { text: "後方の連結部へ向かう", next: "scene3" },
+                    { text: "車両内に戻り荷物を漁る", next: "badend1" }
+                ]
+            },
+            "scene2": {
+                text: "線路の上には赤黒い血痕がべったりと引きずられたように続いていた。まだ乾ききっておらず、濡れた光沢を放ちながら奥の闇へと消えていく。その生暖かい鉄臭さが鼻腔を突き、吐き気を催す。足跡はない。ただ血だけが自らの意思を持つかのように、独りでに前へ進んだように見える。壁にしみ込んだ液体はところどころまだ滴り、トンネル全体が生き物の体内のように鼓動しているかの錯覚を覚える。理性が警鐘を鳴らしても、好奇心が追従を求める。",
+                choices: [
+                    { text: "血の跡を追う", next: "scene4" },
+                    { text: "無視して進む", next: "scene5" },
+                    { text: "血に触れて確かめる", next: "badend1" }
+                ]
+            },
+            "scene3": {
+                text: "連結部は半壊し、鉄骨がねじ曲がってケーブルが蛇のように垂れ下がっていた。時折、青白い火花が弾け、辺りを一瞬だけ昼のように照らす。その光の中で、壁に焼き付いた人影が見えた気がしたが、すぐに暗闇に飲まれる。焦げた匂いは濃く、呼吸をするたびに喉が焼ける。足元には溶けたプラスチックが固まり、靴底に貼りついて歩みを阻む。触れれば即死の電圧が眼前に迫っている。",
+                choices: [
+                    { text: "強引に跨ぐ", next: "scene5" },
+                    { text: "ケーブルを避けて慎重に進む", next: "scene6" },
+                    { text: "ケーブルを掴み進む", next: "badend2" }
+                ]
+            },
+            "scene4": {
+                text: "壁際に古い公衆電話が据え付けられていた。受話器は外れかけ、そこからノイズ混じりの声が途切れ途切れに漏れ出ている。『……タスケテ……』その声は男女の区別もつかず、機械が軋むような不気味さを帯びていた。誰もいないはずの地下に、確かに\"人の声\"が存在している。受話器が小刻みに揺れ、今にも落ちそうになっている。冷や汗が背中を伝い、指先が強張った。",
+                choices: [
+                    { text: "受話器を取る", next: "scene7" },
+                    { text: "無視して進む", next: "scene6" },
+                    { text: "電話線に触れる", next: "badend2" }
+                ]
+            },
+            "scene5": {
+                text: "線路脇に崩れ落ちた人影があった。頭部は潰れ、顔の判別はできない。衣服だけが比較的新しく、つい数分前まで生きていたかのように思える。腐臭はまだない。だが、その身体からは確かに\"もう戻らない\"冷たさが漂っていた。ポケットからは紙片が覗き、指先はなお何かを掴もうとした姿勢のまま硬直している。その表情は分からないはずなのに、絶望が読み取れた気がした。",
+                choices: [
+                    { text: "死体を調べる", next: "scene8" },
+                    { text: "避けて進む", next: "scene6" },
+                    { text: "死体に話しかける", next: "badend1" }
+                ]
+            },
+            "scene6": {
+                text: "頭上には『落石注意』の標識。見上げると、コンクリートの天井に長い亀裂が走っていた。小石がパラパラと落ち、時折、粉塵が目に入って咳き込む。ひび割れの隙間からは水が滴り落ち、粘ついた音を立てて地面を濡らしている。その音がまるで時限爆弾のカウントダウンのように響き、焦燥感を煽った。ここに長く留まれば、命を賭けることになるだろう。",
+                choices: [
+                    { text: "急いで走り抜ける", next: "scene7" },
+                    { text: "立ち止まり観察する", next: "badend4" },
+                    { text: "瓦礫の隙間を探す", next: "scene8" }
+                ]
+            },
+            "scene7": {
+                text: "闇の奥から子供の声がした。『こっちだよ……』反響して複数人のようにも聞こえる。姿は見えない。ただ声だけがあなたを誘う。しかも声は不自然に近く、耳元で囁かれているように感じる。背筋が冷たくなり、理性が『行くな』と叫ぶ。だが耳は確かに聞いた。存在しないはずの\"子供\"の声を。",
+                choices: [
+                    { text: "無視する", next: "scene8" },
+                    { text: "声を追う", next: "scene12" },
+                    { text: "呼び返す", next: "badend3" }
+                ]
+            },
+            "scene8": {
+                text: "巨大な瓦礫が行く手を塞いでいる。高さは2.5メートルほど、鉄骨とコンクリートが複雑に絡み合い、まるで牙を剥く怪物の顎のように迫る。登れるかもしれないが、その隙間から冷たい風が吹き抜け、警告のように耳を打った。瓦礫の下には血が染み、まだ乾いていない。",
+                choices: [
+                    { text: "瓦礫を登る", next: "scene9" },
+                    { text: "迂回路を探す", next: "scene10" },
+                    { text: "耳を当て音を確かめる", next: "badend4" }
+                ]
+            },
+            "scene9": {
+                text: "瓦礫を越えた先は水が溜まり、足首を覆うほどの深さにまで達していた。天井から垂れ下がった電線が水面に触れかけ、青白い火花が散っている。湿った空気は焦げ臭く、電流が走るたびに全身が震えた。飛び越えるか、それとも別の方法を探すか。選択を間違えれば、即死は免れない。",
+                choices: [
+                    { text: "助走をつけて飛び越える", next: "scene10" },
+                    { text: "金属片を投げて試す", next: "scene13" },
+                    { text: "そのまま足を踏み入れる", next: "badend5" }
+                ]
+            },
+            "scene10": {
+                text: "背後から靴音が近づいてきた。ひとつではない。複数だ。反響のせいで数十人にも思える。だが、このトンネルに生存者はいないはずだ。汗が背筋を伝う。呼吸を殺しても、足音は確実に近づいてくる。振り返る勇気が削られていく。",
+                choices: [
+                    { text: "無視して進む", next: "scene11" },
+                    { text: "振り返る", next: "badend1" },
+                    { text: "声をかける", next: "scene14" }
+                ]
+            },
+            "scene11": {
+                text: "足元でカサカサと音が広がる。次の瞬間、線路一面を覆う数千匹のネズミがうごめき出した。赤い眼が闇の中でぎらりと光り、こちらを睨みつけている。毛並みは濡れて光り、どの個体も飢えているようだ。通り抜けるのは容易ではない。踏み込めば全身を噛み砕かれるだろう。",
+                choices: [
+                    { text: "蹴散らし進む", next: "scene13" },
+                    { text: "やり過ごす", next: "scene12" },
+                    { text: "死体に隠れてやり過ごす", next: "badend1" }
+                ]
+            },
+            "scene12": {
+                text: "子供ほどの影が走り抜けた。背丈は120センチほどだが、妙に腕が長い。影は人の形をしているのに、足音は四足の獣のようだった。追うべきか、無視すべきか。息遣いが近くで聞こえる。すぐ背後に潜んでいる気配さえした。",
+                choices: [
+                    { text: "無視する", next: "scene13" },
+                    { text: "追いかける", next: "badend3" },
+                    { text: "座り込む", next: "scene14" }
+                ]
+            },
+            "scene13": {
+                text: "廃車両の窓に白い影が映った。それはあなた自身。だがその顔は歪み、笑っていた。目は赤く光り、口元からは黒い液体が滴っている。背筋が凍り、呼吸が止まった。もし近づけば、自分が自分を殺すのか、それとも……。",
+                choices: [
+                    { text: "近づく", next: "badend1" },
+                    { text: "視線を逸らす", next: "scene14" },
+                    { text: "石を投げる", next: "scene15" }
+                ]
+            },
+            "scene14": {
+                text: "肩に冷たい感触。反射的に振り返ろうとするが、そこには影がない。ただ、確かに\"手\"の感触が残っていた。爪が食い込み、皮膚に赤い線を刻んでいる。血が一滴、二滴と垂れ落ち、暗闇に吸い込まれた。",
+                choices: [
+                    { text: "逃げる", next: "scene15" },
+                    { text: "振り返る", next: "badend1" },
+                    { text: "握り返す", next: "badend3" }
+                ]
+            },
+            "scene15": {
+                text: "焦げたような臭気が鼻を刺す。壁一面に黒い手形が押し付けられ、何十人もの叫びが焼き付けられたかのように残っていた。鉄の匂いが濃く、靴底の下では焦げた肉片が砕ける感触がある。線路脇には焼け焦げた靴が転がっていた。まだ温もりが残っているのか、靴底はじりじりと音を立てている。遠くで金属のきしむ音が重なり、空気が重く沈んでいく。胸の鼓動は早まり、思考が散り散りになる。ここはもう、人の通る場所ではない。",
+                choices: [
+                    { text: "駆け抜ける", next: "scene16" },
+                    { text: "音を確かめる", next: "badend6" },
+                    { text: "靴を調べる", next: "scene17" }
+                ]
+            },
+            "scene16": {
+                text: "通路は急に狭まり、左右からコンクリートの壁が迫ってくる。肩を擦りながら進むたびに粉塵が舞い、息苦しさが胸を圧迫する。呼吸を浅くしても喉に石の味が残る。背後では何かが這うような音が響き、間違いなく\"何か\"が追ってきている。狭い通路は逃げ場を奪い、選択肢は前進か死かしか残されていなかった。",
+                choices: [
+                    { text: "前進する", next: "scene17" },
+                    { text: "戻る", next: "scene15" },
+                    { text: "背後を確かめる", next: "badend7" }
+                ]
+            },
+            "scene17": {
+                text: "足元に冷たい感触が広がった。腰まで水が浸かり、泥の匂いと鉄の味が口に広がる。壁に触れれば苔のような粘液がまとわりつき、皮膚に焼け付く感覚が残る。暗い水面には波紋が広がり、何かが泳いでいるのがわかる。小さな泡が浮かび上がり、次の瞬間、水面が大きく揺れた。そこにいるのは魚ではない。もっと大きく、もっと重いものだ。",
+                choices: [
+                    { text: "水を渡る", next: "scene18" },
+                    { text: "水を探る", next: "badend1" },
+                    { text: "迂回する", next: "scene19" }
+                ]
+            },
+            "scene18": {
+                text: "闇の向こうに、人影が立っていた。長い腕を垂らし、巨大な鎌を握っているように見える。輪郭は黒い霧に覆われ、顔は見えない。ただその存在だけで肺が締め付けられ、呼吸ができなくなる。時間が止まったように感じるが、影は確実にこちらを見ている。その瞬間、寒気が頭のてっぺんから背骨を駆け抜けた。",
+                choices: [
+                    { text: "逃げる", next: "scene19" },
+                    { text: "話しかける", next: "badend6" },
+                    { text: "水に飛び込む", next: "badend6" }
+                ]
+            },
+            "scene19": {
+                text: "異様な臭気が立ち込める。ガス管が破裂しているのか、空気は重く濁っていた。肺が焼けるように苦しく、酸素が薄れていく。目の前が暗く揺らぎ、立っていることさえ困難になる。少しでも遅れれば、意識は途絶え二度と戻らないだろう。頭の奥が痛み、鼓動は自分のものではないリズムを刻み始めていた。",
+                choices: [
+                    { text: "布で口を覆い急ぐ", next: "scene20" },
+                    { text: "管を叩いて止めようとする", next: "badend7" },
+                    { text: "息を止めて耐える", next: "scene20" }
+                ]
+            },
+            "scene20": {
+                text: "突如、雷光のような閃光がトンネルを裂いた。耳を劈く轟音とともに、闇に人影の残像が焼き付く。目を凝らすと、それは自分自身の姿だった。だがその顔は裂けるように笑い、指先からは血の雫が垂れていた。瞬きのたびにその影は近づき、肌に触れようと手を伸ばす。心臓が跳ね、呼吸が乱れる。己の影が己を呑み込もうとしているのだ。",
+                choices: [
+                    { text: "目を逸らす", next: "scene21" },
+                    { text: "影に踏み入る", next: "badend1" },
+                    { text: "戻る", next: "scene19" }
+                ]
+            },
+            "scene21": {
+                text: "コンクリート壁に埋め込まれるように、全長1.5メートルの爆弾が横たわっていた。表面は錆びつき、時代を越えてここに眠っているのが分かる。だが不気味な圧を放ち、近づくだけで汗が噴き出す。僅かな振動でも起爆するかもしれない。地下鉄全体を吹き飛ばすほどの力を秘めていると直感する。",
+                choices: [
+                    { text: "横をすり抜ける", next: "scene22" },
+                    { text: "触れる", next: "badend8" },
+                    { text: "石を投げる", next: "badend8" }
+                ]
+            },
+            "scene22": {
+                text: "暗闇の奥から、ライトも音もない電車が迫ってくる。線路を揺らす振動だけが近づき、心臓と同じ鼓動で脈打つ。姿は見えない。それでも確かにそこにいる。逃げ場を探す時間は数秒しか残されていなかった。",
+                choices: [
+                    { text: "飛び退く", next: "scene23" },
+                    { text: "立ち尽くす", next: "badend9" },
+                    { text: "飛び乗る", next: "badend9" }
+                ]
+            },
+            "scene23": {
+                text: "壁の亀裂から風が漏れ、『たすけて』と囁いているように聞こえた。光の反射が瞳のように見え、こちらを覗き込んでいる。指を近づけると吸い込まれそうな感覚に囚われ、全身が粟立った。ここには何かが潜んでいる。だが、それが人である保証はどこにもない。",
+                choices: [
+                    { text: "無視する", next: "scene24" },
+                    { text: "指を差し込む", next: "badend1" },
+                    { text: "壁を壊す", next: "badend10" }
+                ]
+            },
+            "scene24": {
+                text: "黒い靄のような影が背後から迫ってきた。足音はない。だが呼吸音だけが耳に触れる。近づいてくる気配は間違いなく、自分に狙いを定めていた。走らなければ、触れられる。その直感が全身を突き動かした。",
+                choices: [
+                    { text: "全力で走る", next: "scene25" },
+                    { text: "立ち止まり待つ", next: "badend1" },
+                    { text: "灯りを掲げる", next: "scene26" }
+                ]
+            },
+            "scene25": {
+                text: "天井から透明な水滴が落ちてきた。触れた瞬間、手袋が煙を上げる。酸性の液体だ。鉄骨までもがじりじりと溶けていく。髪に一滴落ちただけで頭皮が焼けるような痛みが走る。ここを通り抜けるには覚悟が必要だ。",
+                choices: [
+                    { text: "駆け抜ける", next: "scene26" },
+                    { text: "上着を被る", next: "scene26" },
+                    { text: "瓶に集める", next: "badend1" }
+                ]
+            },
+            "scene26": {
+                text: "広間に足を踏み入れると、異臭が鼻を突いた。そこには山のように積み重なる死体。五十を超える数の眼窩は空洞で、すべてがこちらを見ているように思えた。皮膚はただれ、骨が露出し、腐敗の音が耳鳴りのように響く。吐き気を堪えながらも、足は進むしかなかった。",
+                choices: [
+                    { text: "息を止め進む", next: "scene27" },
+                    { text: "死体を調べる", next: "badend10" },
+                    { text: "迂回する", next: "scene27" }
+                ]
+            },
+            "scene27": {
+                text: "遠くに光が見えた。だがその前に、最後の障壁が立ちはだかる。耳を塞ぎたくなるほどの囁き声が四方から響き、膝が震える。出口は目の前にあるのに、心は闇に縛られている。ここを越えられるかどうかがすべてだった。",
+                choices: [
+                    { text: "突破を試みる", next: "scene28" },
+                    { text: "立ち止まる", next: "badend1" },
+                    { text: "叫ぶ", next: "badend3" }
+                ]
+            },
+            "scene28": {
+                text: "──ついに出口に辿り着いた。地上から差し込む光は眩しく、空気は清浄だった。暗闇と死の世界を越え、あなたは自由を手にした。だが背後でかすかに囁き声が残っている。『また来てね』。",
+                choices: [
+                    { text: "脱出する", next: "clearEnd" }
+                ]
+            },
+            "clearEnd": {
+                text: "──あなたは地上へ戻った。暗闇の恐怖を超え、自由を取り戻したのだ。\n\n★ クリアエンド ★\n\nおめでとうございます！全28シーンをクリアしました！",
+                isEnding: true
+            },
+            "badend1": { 
+                text: "──あなたの意識は闇に飲まれた。\n\n★ BAD END 1：愚かな選択 ★",
+                isEnding: true
+            },
+            "badend2": { 
+                text: "──電流が全身を貫き、焼け焦げた匂いが漂った。\n\n★ BAD END 2：感電死 ★",
+                isEnding: true
+            },
+            "badend3": { 
+                text: "──声に応じた瞬間、冷たい腕があなたを抱きしめた。\n\n★ BAD END 3：誘い ★",
+                isEnding: true
+            },
+            "badend4": { 
+                text: "──瓦礫が崩れ、あなたの身体を押し潰した。\n\n★ BAD END 4：圧死 ★",
+                isEnding: true
+            },
+            "badend5": { 
+                text: "──水面から閃光が走り、あなたは沈んだ。\n\n★ BAD END 5：感電死 ★",
+                isEnding: true
+            },
+            "badend6": { 
+                text: "──鋭い鎌が振り下ろされ、視界は赤に染まった。\n\n★ BAD END 6：死神 ★",
+                isEnding: true
+            },
+            "badend7": { 
+                text: "──這い寄る影に絡め取られ、窒息していった。\n\n★ BAD END 7：窒息 ★",
+                isEnding: true
+            },
+            "badend8": { 
+                text: "──爆音と閃光。あなたの身体は塵となった。\n\n★ BAD END 8：爆死 ★",
+                isEnding: true
+            },
+            "badend9": { 
+                text: "──電車に呑まれ、肉片となった。\n\n★ BAD END 9：轢死 ★",
+                isEnding: true
+            },
+            "badend10": { 
+                text: "──死体の山に取り込まれ、あなたもその一部となった。\n\n★ BAD END 10：供物 ★",
+                isEnding: true
+            }
+        };
+
+        // --- ゲームの状態を管理する変数 ---
+        let currentScene = "scene1";
+
+        // --- DOM要素の取得 ---
+        const sceneTextElement = document.getElementById('sceneText');
+        const choicesElement = document.getElementById('choices');
+        const endTextElement = document.getElementById('endText');
+
+        // --- ゲームの制御関数 ---
+
+        /** 指定されたIDの画面を表示する関数 */
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        /** タイトル画面を表示 */
+        function showTitle() {
+            showScreen('titleScreen');
+        }
+
+        /** 遊び方画面を表示 */
+        function showInstructions() {
+            showScreen('instructionScreen');
+        }
+
+        /** ゲームを開始する関数 */
+        function startGame() {
+            currentScene = "scene1";
+            showScene(currentScene);
+            showScreen('gameScreen');
+        }
+
+        /** 指定されたシーンを表示する関数 */
+        function showScene(sceneId) {
+            const scene = gameData[sceneId];
+            if (!scene) return; // シーンが存在しない場合は何もしない
+
+            // テキストと選択肢を画面に設定
+            sceneTextElement.textContent = scene.text;
+            choicesElement.innerHTML = ''; // 以前の選択肢をクリア
+
+            if (scene.choices) {
+                scene.choices.forEach(choice => {
+                    const button = document.createElement('button');
+                    button.textContent = choice.text;
+                    button.onclick = () => makeChoice(choice);
+                    choicesElement.appendChild(button);
+                });
+            }
+        }
+        
+        /** 選択肢が選ばれたときの処理 */
+        function makeChoice(choice) {
+            const nextScene = gameData[choice.next];
+            if (nextScene && nextScene.isEnding) {
+                showEnding(choice.next);
+            } else {
+                showScene(choice.next);
+            }
+        }
+
+        /** エンディングを表示する関数 */
+        function showEnding(endingId) {
+            const ending = gameData[endingId];
+            endTextElement.textContent = ending.text;
+            showScreen('endScreen');
+        }
+
+        // --- 初期化 ---
+        // ページの読み込みが完了したらタイトル画面を表示
+        document.addEventListener('DOMContentLoaded', showTitle);
+    </script>
+
+</body>
+</html>
